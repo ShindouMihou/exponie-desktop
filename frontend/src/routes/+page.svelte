@@ -14,6 +14,8 @@
     import {GetDataset} from "$lib/wailsjs/go/main/App";
     import Info from "$lib/components/screens/Info.svelte";
     import Header from "$lib/components/Header.svelte";
+    import {LogInfo, LogWarning} from "$lib/wailsjs/runtime";
+    import {withTimeout} from "$lib/network";
 
     let loaded = false
 
@@ -38,50 +40,29 @@
     $: reduced = reduce($word);
     $: hidden = hide($word);
 
-    let offlineTimer: number | undefined
-    let fasterOfflineTimer: number | undefined
+    let offlineTimer = setInterval(fasterCheckInternetConnection, 2 * 1000)
+    let fasterOfflineTimer = setInterval(checkInternetConnection, 15 * 1000)
     onDestroy(() => {
         clearInterval(offlineTimer);
         clearInterval(fasterOfflineTimer);
     });
 
     onMount(async () => {
-        fasterOfflineTimer = setInterval(() => {
-            if (!navigator.onLine && !offline) {
-                setOffline()
-            }
-        }, 2 * 1000)
-        offlineTimer = setInterval(() => {
-                if (navigator.onLine) {
-                    fetch('https://exponie.me/hello.txt')
-                        .then((response) => {
-                            if (response.ok) {
-                                offline = false;
-                                if (definition === DEFAULT_DEFINITION) {
-                                    define($word);
-                                }
-                            } else {
-                                if (!offline) {
-                                    setOffline()
-                                }
-                            }
-                        })
-                        .catch((e) => {
-                            if (!offline) {
-                                setOffline()
-                            }
-                        })
-                } else {
-                    if (!offline) {
-                        setOffline();
-                    }
-                }
-            },
-            15 * 1000
-        )
+        await checkInternetConnection()
         try {
-            await EnsureDataset()
+            if (!offline) {
+                await EnsureDataset()
+            }
             dataset = await GetDataset()
+
+            LogInfo("size of dataset: " + dataset.length + ", offline: " + offline)
+            if (dataset.length === 0 && offline) {
+                mountErrors = [
+                    "You need internet connection for the first time opening exponie.me, this is because we need to get " +
+                    "the dataset needed for the application to work. Please try again later."
+                ]
+                return
+            }
 
             if (!navigator.onLine) {
                 setOffline()
@@ -96,6 +77,39 @@
             }
         }
     })
+
+    function fasterCheckInternetConnection() {
+        if (!navigator.onLine && !offline) {
+            setOffline()
+        }
+    }
+
+    async function checkInternetConnection() {
+        if (navigator.onLine) {
+            await withTimeout(1_000, "check_connection", async (signal) => {
+                await fetch('https://exponie.me/hello.txt', { signal }).then((response) => {
+                    if (response.ok) {
+                        offline = false;
+                        if (definition === DEFAULT_DEFINITION) {
+                            define($word);
+                        }
+                    } else {
+                        if (!offline) {
+                            setOffline()
+                        }
+                    }
+                }).catch((e) => {
+                    if (!offline) {
+                        setOffline()
+                    }
+                })
+            })
+        } else {
+            if (!offline) {
+                setOffline();
+            }
+        }
+    }
 
     function setOffline() {
         offline = true;
@@ -112,16 +126,18 @@
 
     function define(word: string) {
         terminal.network(word)
-        return fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + word)
-            .then((response) => response.ok === true ? response.json() : null)
-            .then((data: Array<any>) => {
-                if (data != null) {
-                    definition = data.at(0).meanings[0].definitions[0].definition
-                } else {
-                    definition = 'No definition found.';
-                    throw {error: 'No definition found, this exception is intentional.'}
-                }
-            })
+        return withTimeout(2_000, "definition", async (signal) => {
+            await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + word, { signal })
+                .then((response) => response.ok === true ? response.json() : null)
+                .then((data: Array<any>) => {
+                    if (data != null) {
+                        definition = data.at(0).meanings[0].definitions[0].definition
+                    } else {
+                        definition = 'No definition found.';
+                        throw {error: 'No definition found, this exception is intentional.'}
+                    }
+                })
+        })
     }
 
     async function reset() {
