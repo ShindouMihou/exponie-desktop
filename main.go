@@ -21,10 +21,16 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup:        app.startup,
-		Frameless:        true,
-		MinHeight:        667,
-		MinWidth:         375,
+		OnStartup: app.startup,
+		Frameless: true,
+		MinHeight: 667,
+		MinWidth:  375,
+		BackgroundColour: &options.RGBA{
+			R: 0,
+			G: 0,
+			B: 0,
+			A: 1,
+		},
 		WindowStartState: options.Normal,
 		Bind: []interface{}{
 			app,
