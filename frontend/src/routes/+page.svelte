@@ -81,7 +81,13 @@
         )
         try {
             await EnsureDataset()
-            loaded = true
+            dataset = await GetDataset()
+
+            if (!navigator.onLine) {
+                setOffline()
+            }
+
+            await reset()
         } catch (error: any) {
             if (error instanceof Error) {
                 mountErrors = [error.message]
@@ -89,13 +95,6 @@
                 mountErrors = [error]
             }
         }
-        dataset = await GetDataset()
-
-        if (!navigator.onLine) {
-            setOffline()
-        }
-
-        await reset()
     })
 
     function setOffline() {
@@ -239,7 +238,7 @@
 
 <svelte:window on:keydown={handleGlobalKeyDown}/>
 
-{#if !loaded}
+{#if dataset.length === 0}
     {#if mountErrors.length === 0}
         <Loading/>
     {:else}
