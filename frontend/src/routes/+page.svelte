@@ -256,7 +256,10 @@
 
 {#if dataset.length === 0}
     {#if mountErrors.length === 0}
-        <Loading/>
+        <div class="w-full flex flex-col gap-2">
+            <Header on:show={() => navigate('INFO')}/>
+            <Loading/>
+        </div>
     {:else}
         <MountError errors={mountErrors}/>
     {/if}
