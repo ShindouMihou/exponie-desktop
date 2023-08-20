@@ -24,3 +24,16 @@ The desktop client was designed to be a simpler port of Exponentia, therefore, t
 
 Other than those, the desktop client downloads the dataset locally and checks for updates on the dataset every start-up, allowing you to play the client 
 offline.
+
+## Installation
+
+Windows users can download the installer, or the standalone executable on [`GitHub Releases`](https://github.com/ShindouMihou/exponie-desktop/releases). We 
+recommend using the installer if you want to have the application findable using the Start Menu, and other related. You can use the standalone executable 
+to run the application directly, if you want.
+
+To compile for your own platform, you can clone the repository and install [`wails.io`](https://wails.io) before running the following command:
+```shell
+wails build -upx -clean
+```
+The above command should compile the application in less than 20 seconds and create a binary for your platform under `build/bin`. We recommend having `upx` installed 
+to compress the binary.
