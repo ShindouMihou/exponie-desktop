@@ -10,3 +10,5 @@ export const start = writable(-1)
 
 export const isDisabled = writable(false)
 export const sessionStatus: Writable<number> = writable(0)
+
+export const loadingState: Writable<string> = writable("Loading configuration...")

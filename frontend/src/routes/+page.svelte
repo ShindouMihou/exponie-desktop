@@ -6,7 +6,7 @@
     import MountError from "$lib/components/MountError.svelte";
     import InputField from "$lib/components/InputField.svelte";
     import Hint from "$lib/components/Hint.svelte";
-    import {input, isDisabled, lastInput, sessionStatus, start, word} from "$lib/store";
+    import {input, isDisabled, lastInput, loadingState, sessionStatus, start, word} from "$lib/store";
     import terminal from "$lib/logging"
     import {hide, reduce} from "$lib/word";
     import IconButton from "$lib/components/shared/IconButton.svelte";
@@ -14,7 +14,7 @@
     import {GetDataset} from "$lib/wailsjs/go/main/App";
     import Info from "$lib/components/screens/Info.svelte";
     import Header from "$lib/components/Header.svelte";
-    import {LogInfo, LogWarning} from "$lib/wailsjs/runtime";
+    import {LogError, LogInfo, LogWarning} from "$lib/wailsjs/runtime";
     import {withTimeout} from "$lib/network";
 
     let loaded = false
@@ -48,11 +48,14 @@
     });
 
     onMount(async () => {
+        $loadingState = "Checking internet connection..."
         await checkInternetConnection()
         try {
             if (!offline) {
+                $loadingState = "Checking for dataset updates..."
                 await EnsureDataset()
             }
+            $loadingState = "Loading dataset..."
             dataset = await GetDataset()
 
             LogInfo("size of dataset: " + dataset.length + ", offline: " + offline)
@@ -64,6 +67,7 @@
                 return
             }
 
+            $loadingState = "Application should have loaded already, this is a bug."
             if (!navigator.onLine) {
                 setOffline()
             }
@@ -86,24 +90,32 @@
 
     async function checkInternetConnection() {
         if (navigator.onLine) {
-            await withTimeout(1_000, "check_connection", async (signal) => {
-                await fetch('https://exponie.me/hello.txt', { signal }).then((response) => {
-                    if (response.ok) {
-                        offline = false;
-                        if (definition === DEFAULT_DEFINITION) {
-                            define($word);
+            try {
+                await withTimeout(1_000, "check_connection", async (signal) => {
+                    await fetch('https://exponie.me/hello.txt', { signal: signal }).then((response) => {
+                        if (response.ok) {
+                            offline = false;
+                            if (definition === DEFAULT_DEFINITION) {
+                                define($word);
+                            }
+                        } else {
+                            if (!offline) {
+                                setOffline()
+                            }
                         }
-                    } else {
+                    }).catch((e) => {
                         if (!offline) {
                             setOffline()
                         }
-                    }
-                }).catch((e) => {
-                    if (!offline) {
-                        setOffline()
-                    }
+                    })
                 })
-            })
+            } catch (e: any) {
+                if (e === "timeout" || e.message === "timeout") {
+                    setOffline()
+                    return
+                }
+                LogError("Network request for check_connection errored: " + e)
+            }
         } else {
             if (!offline) {
                 setOffline();
@@ -127,7 +139,7 @@
     function define(word: string) {
         terminal.network(word)
         return withTimeout(2_000, "definition", async (signal) => {
-            await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + word, { signal })
+            await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + word, { signal: signal })
                 .then((response) => response.ok === true ? response.json() : null)
                 .then((data: Array<any>) => {
                     if (data != null) {

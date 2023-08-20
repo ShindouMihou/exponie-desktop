@@ -6,9 +6,8 @@ export async function withTimeout<T>(milliseconds: number, identifier: string, f
         controller.abort("timeout")
         LogWarning("Network request for " + identifier + " reached timeout after " + milliseconds + " milliseconds.")
     }, milliseconds)
-    clearTimeout(timeout)
-
     const res = await fetch(controller.signal)
+    clearTimeout(timeout)
     if (controller.signal.aborted) {
         return Promise.reject("timeout")
     }
