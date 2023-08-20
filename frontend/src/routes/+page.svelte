@@ -273,7 +273,10 @@
             <Loading/>
         </div>
     {:else}
-        <MountError errors={mountErrors}/>
+        <div class="w-full flex flex-col gap-2">
+            <Header on:show={() => navigate('INFO')}/>
+            <MountError errors={mountErrors}/>
+        </div>
     {/if}
 {:else}
     <div class="w-full flex flex-col gap-2">

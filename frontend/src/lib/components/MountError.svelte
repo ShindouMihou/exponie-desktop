@@ -3,7 +3,7 @@
 
     export let errors: string[];
 </script>
-<div class="flex flex-col" in:fade>
+<div class="flex flex-col pt-4" in:fade>
     <div class="flex flex-row gap-2 items-center justify-between">
         <h1 class="text-2xl font-light text-pink-300 w-fit uppercase">Error</h1>
     </div>
