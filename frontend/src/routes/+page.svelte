@@ -6,7 +6,7 @@
     import MountError from "$lib/components/MountError.svelte";
     import InputField from "$lib/components/InputField.svelte";
     import Hint from "$lib/components/Hint.svelte";
-    import {input, isDisabled, lastInput, loadingState, sessionStatus, start, word} from "$lib/store";
+    import {currentScreen, input, isDisabled, lastInput, loadingState, sessionStatus, start, word} from "$lib/store";
     import terminal from "$lib/logging"
     import {hide, reduce} from "$lib/word";
     import IconButton from "$lib/components/shared/IconButton.svelte";
@@ -14,7 +14,7 @@
     import {GetDataset} from "$lib/wailsjs/go/main/App";
     import Info from "$lib/components/screens/Info.svelte";
     import Header from "$lib/components/Header.svelte";
-    import {LogError, LogInfo, LogWarning} from "$lib/wailsjs/runtime";
+    import {LogError, LogInfo} from "$lib/wailsjs/runtime";
     import {withTimeout} from "$lib/network";
 
     let loaded = false
@@ -30,8 +30,6 @@
     let offline = false;
 
     let autoSuggestedDetected = false
-
-    let screen = 'PLAY';
 
     let mountErrors: string[] = []
 
@@ -128,8 +126,8 @@
         hintShown = true;
     }
 
-    function navigate(to: 'PLAY' | 'SETTINGS' | 'INFO') {
-        screen = to;
+    function navigate(to: string) {
+        $currentScreen = to;
     }
 
     function random(): string {
@@ -262,26 +260,24 @@
             document.getElementById('input')!!.focus();
         }
     }
+
+    function _head(ev: CustomEvent<string>) {
+        navigate(ev.detail)
+    }
 </script>
 
 <svelte:window on:keydown={handleGlobalKeyDown}/>
 
-{#if dataset.length === 0}
-    {#if mountErrors.length === 0}
-        <div class="w-full flex flex-col gap-2">
-            <Header on:show={() => navigate('INFO')}/>
+<div class="w-full flex flex-col gap-2">
+    <Header on:show={_head}/>
+    {#if dataset.length === 0}
+        {#if mountErrors.length === 0}
             <Loading/>
-        </div>
-    {:else}
-        <div class="w-full flex flex-col gap-2">
-            <Header on:show={() => navigate('INFO')}/>
+        {:else}
             <MountError errors={mountErrors}/>
-        </div>
-    {/if}
-{:else}
-    <div class="w-full flex flex-col gap-2">
-        {#if screen === 'PLAY'}
-            <Header on:show={() => navigate('INFO')}/>
+        {/if}
+    {:else}
+        {#if $currentScreen === 'PLAY'}
             <div class="w-full m-auto" id="container" in:fade>
                 <div class="flex flex-col gap-2 w-full items-center justify-center m-auto">
                     {#if autoSuggestedDetected}
@@ -314,9 +310,8 @@
                             in:fade>OFFLINE</p>{/if}
                 </div>
             </div>
-        {:else if screen === 'INFO'}
-            <Header on:show={() => navigate('PLAY')}/>
+        {:else if $currentScreen === 'INFO'}
             <Info on:hide={() =>  navigate('PLAY')}/>
         {/if}
-    </div>
-{/if}
+    {/if}
+</div>

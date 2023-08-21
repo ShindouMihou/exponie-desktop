@@ -3,6 +3,7 @@
     import {Quit, WindowIsMaximised, WindowMinimise, WindowToggleMaximise} from "$lib/wailsjs/runtime/runtime.js";
     import {Icon} from "@steeze-ui/svelte-icon";
     import {Cross2, EnterFullScreen, ExitFullScreen} from "@steeze-ui/radix-icons"
+    import {currentScreen} from "$lib/store";
 
     const dispatch = createEventDispatcher()
     let maximized = false
@@ -19,7 +20,7 @@
 
 <div class="w-full justify-between flex flex-row items-center" style="--wails-draggable:drag">
     <div>
-        <button on:click={() => dispatch('show')}
+        <button on:click={() => dispatch('show', $currentScreen !== 'PLAY' ? 'PLAY' : 'INFO')}
                 class="font-bold uppercase text-white w-fit p-1 px-[0.84rem] hover:opacity-80 duration-300 ease-in-out text-xs">
             Exponie.me
         </button>
