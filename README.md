@@ -21,6 +21,7 @@ You can also play the web-version, which tends to be more updated, via the [`exp
 The desktop client was designed to be a simpler port of Exponentia, therefore, there were changes made:
 1. **Non-configurable settings**: As most of the opt-able settings were mostly unavailable in the desktop client, we decided to disable settings for now.
 2. **Text-to-speech**: We disabled text-to-speech because the desktop client doesn't support any known ways for text-to-speech so far.
+3. **Offline Definitions**: The desktop client has definitions available even when offline, this is because we can store large files over the filesystem, which is not possible with browser.
 
 Other than those, the desktop client downloads the dataset locally and checks for updates on the dataset every start-up, allowing you to play the client 
 offline.

@@ -1,7 +1,6 @@
 <script lang="ts">
     import {onDestroy, onMount} from "svelte";
     import {fade} from "svelte/transition"
-    import {EnsureDataset} from "$lib/wailsjs/go/main/App.js";
     import Loading from "$lib/components/Loading.svelte";
     import MountError from "$lib/components/MountError.svelte";
     import InputField from "$lib/components/InputField.svelte";
@@ -11,11 +10,11 @@
     import {hide, reduce} from "$lib/word";
     import IconButton from "$lib/components/shared/IconButton.svelte";
     import {ArrowPath} from "@steeze-ui/heroicons";
-    import {GetDataset} from "$lib/wailsjs/go/main/App";
     import Info from "$lib/components/screens/Info.svelte";
     import Header from "$lib/components/Header.svelte";
     import {LogError, LogInfo} from "$lib/wailsjs/runtime";
     import {withTimeout} from "$lib/network";
+    import {EnsureDataset, GetDataset, GetDefinitions} from "$lib/wailsjs/go/exponie/App";
 
     let loaded = false
 
@@ -34,6 +33,7 @@
     let mountErrors: string[] = []
 
     let dataset: string[] = []
+    let definitions: {[key: string]: string}
 
     $: reduced = reduce($word);
     $: hidden = hide($word);
@@ -55,9 +55,11 @@
             }
             $loadingState = "Loading dataset..."
             dataset = await GetDataset()
+            $loadingState = "Loading definitions..."
+            definitions = await GetDefinitions()
 
-            LogInfo("size of dataset: " + dataset.length + ", offline: " + offline)
-            if (dataset.length === 0 && offline) {
+            LogInfo("size of dataset: " + dataset.length + ", offline: " + offline + ", definitions: " + Object.keys(definitions).length)
+            if ((dataset.length === 0 || definitions == null) && offline) {
                 mountErrors = [
                     "You need internet connection for the first time opening exponie.me, this is because we need to get " +
                     "the dataset needed for the application to work. Please try again later."
@@ -94,7 +96,7 @@
                         if (response.ok) {
                             offline = false;
                             if (definition === DEFAULT_DEFINITION) {
-                                define($word);
+                                define($word, false);
                             }
                         } else {
                             if (!offline) {
@@ -134,7 +136,16 @@
         return dataset[Math.floor(Math.random() * dataset.length)].toLowerCase();
     }
 
-    function define(word: string) {
+    function define(word: string, useCache: boolean = true) {
+        if (useCache) {
+            let def = definitions[word]
+            if (def != null) {
+                terminal.event({ ev: "definition", cached: true, word: word, definition: def })
+                definition = def
+                return
+            }
+        }
+
         terminal.network(word)
         return withTimeout(2_000, "definition", async (signal) => {
             await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + word, { signal: signal })
@@ -169,9 +180,7 @@
             hintShown = true;
             let n = random()
 
-            if (!offline) {
-                await define(n);
-            }
+            await define(n);
 
             $word = n;
             const inputField = document.getElementById('input')

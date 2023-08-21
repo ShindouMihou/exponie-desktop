@@ -4,7 +4,7 @@
     import {fade} from "svelte/transition";
     import {Github, Producthunt} from "@steeze-ui/simple-icons";
     import OtherLink from "$lib/components/info/OtherLink.svelte";
-    import {GetVersion} from "$lib/wailsjs/go/main/App";
+    import {GetVersion} from "$lib/wailsjs/go/exponie/App";
 
     const dispatch = createEventDispatcher()
     let currentVersion = -1.0

@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"exponie/pkg/exponie"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -13,7 +14,7 @@ var assets embed.FS
 
 func main() {
 	// Create an instance of the app structure
-	app := NewApp()
+	app := exponie.NewApp()
 
 	// Create application with options
 	err := wails.Run(&options.App{
@@ -21,7 +22,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		OnStartup: app.startup,
+		OnStartup: app.Startup,
 		Frameless: true,
 		MinHeight: 667,
 		MinWidth:  375,
