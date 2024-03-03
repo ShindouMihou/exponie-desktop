@@ -92,7 +92,7 @@
         if (navigator.onLine) {
             try {
                 await withTimeout(1_000, "check_connection", async (signal) => {
-                    await fetch('https://exponie.me/hello.txt', { signal: signal }).then((response) => {
+                    await fetch('https://exponie.mihou.pw/hello.txt', { signal: signal }).then((response) => {
                         if (response.ok) {
                             offline = false;
                             if (definition === DEFAULT_DEFINITION) {
