@@ -1,6 +1,6 @@
 <div align="center">
 
-![Exponie](https://exponie.me/banner.png)
+![Exponie](https://exponie.mihou.pw/banner.png)
 
 a minimalist's choice of spelling test.
 </div>
