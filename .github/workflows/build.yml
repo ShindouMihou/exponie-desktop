@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         build: [
-          {name: 'wails-linux', platform: 'linux/amd64', os: 'ubuntu-latest'},
-          {name: 'wails-windows', platform: 'windows/amd64', os: 'windows-latest'}
+          {name: 'exponie', platform: 'linux/amd64', os: 'ubuntu-latest'},
+          {name: 'exponie', platform: 'windows/amd64', os: 'windows-latest'}
         ]
     runs-on: ${{ matrix.build.os }}
     steps:
